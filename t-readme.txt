@@ -19,6 +19,8 @@ res.send()
 res.json()
 
 res.render()
+
+res.redirect()
 ------------------------------------
 # RESTful API
 
@@ -43,7 +45,7 @@ res.render()
 /products/:id
 
 
-#以下為不好範例
+
 /products/:category_id/:product_id
 
 

@@ -5,6 +5,13 @@ const multer = require("multer");
 // const upload = multer({ dest:'tmp-uploads/' });
 const upload = require(__dirname + "/modules/upload-images");
 const session = require("express-session");
+const moment = require('moment-timezone');
+
+const db = require(__dirname + '/modules/mysql-connect');
+//跟著前面session
+const MysqlStore = require('express-mysql-session')(session);
+//{}空物件 db為連線物件
+const sessionStore = new MysqlStore({}, db);
 
 const app = express();
 //註冊樣版引擎
@@ -19,6 +26,8 @@ app.use(
         saveUninitialized: false,
         resave: false, // 沒變更內容是否強制回存
         secret: "dsdasfdsgfsdg34324235gdfgfgsg",//加密用的字串
+        //有store就會在資料庫裡創session
+        store: sessionStore,
         cookie: {
             maxAge: 1200000, // 20分鐘，單位毫秒
         },
@@ -95,6 +104,32 @@ app.get(/^\/hi\/?/i, (req, res) => {
 });
 app.get(["/aaa", "/bbb"], (req, res) => {
     res.send({ url: req.url, code: "array" });
+});
+
+//自動把json檔轉陣列
+app.get('/try-json', (req, res)=>{
+    const data = require(__dirname + '/data/data01');
+    console.log(data);
+    //變數rows=(data)
+    //locals前端
+    res.locals.rows = data;
+    //render樣板在views下
+    //res渲染到views裡的try-json.ejs
+    res.render('try-json');
+});
+
+app.get('/try-moment', (req, res)=>{
+    const fm = 'YYYY-MM-DD HH:mm:ss';
+    //moment()現在時間
+    const m1 = moment();
+    const m2 = moment('2022-02-28');
+
+    res.json({
+        m1: m1.format(fm),
+        m1a: m1.tz('Europe/London').format(fm),
+        m2: m2.format(fm),
+        m2a: m2.tz('Europe/London').format(fm),
+    })
 });
 
 const adminsRouter = require(__dirname + "/routes/admins");
