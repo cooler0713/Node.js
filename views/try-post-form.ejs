@@ -1,43 +1,38 @@
-<%- include('parts/html-head') %> <%- include('parts/navbar') %>
-<div class="container">
-    <form method="post">
-        <div class="mb-3">
-            <label for="exampleInputEmail1" class="form-label"
-                >Email address</label
-            >
-            <input
-                type="text"
-                name="email"
-                class="form-control"
-                id="exampleInputEmail1"
-                aria-describedby="emailHelp"
-            />
-            <div class="form-text"><%= typeof email !=='undefined' ? email : '' %></div>
+<%- include('parts/html-head') %>
+    <%- include('parts/navbar') %>
+        <div class="container">
+            <form method="post">
+                <div class="mb-3">
+                    <label for="exampleInputEmail1" class="form-label">Email address</label>
+                    <input type="text" name="email" class="form-control" id="exampleInputEmail1"
+                        aria-describedby="emailHelp" />
+                    <div class="form-text">
+                        <%= typeof email !=='undefined' ? email : '' %>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Password</label>
+                    <input type="text" name="password" class="form-control" id="exampleInputPassword1" />
+                    <!-- 所有傳過來的template= .ejs檔變數都會在local底下 -->
+                    <!-- <div class="form-text"><%= locals.password ? password : ''  %></div> 與下面相同-->
+                    <div class="form-text">
+                        <%= locals.password ?? '' %>
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+            <!-- pre與其他標籤不同，可完整呈現程式碼當中的文本格式，包含換行符號、空格 -->
+            <!-- (locals, null, 4)裡中間事變成什麼形式 右邊是物件縮排幾格 裡面格式化是方便人看 -->
+            <pre><%- JSON.stringify(locals, null, 4) %></pre>
         </div>
-        <div class="mb-3">
-            <label for="exampleInputPassword1" class="form-label"
-                >Password</label
-            >
-            <input
-                type="text"
-                name="password"
-                class="form-control"
-                id="exampleInputPassword1"
-            />
-            <!-- <div class="form-text"><%= locals.password ? password : ''  %></div> 與下面相同-->
-            <div class="form-text"><%= locals.password ?? ''  %></div>
-        </div>
-        <div class="mb-3 form-check">
-
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-    <pre><%- JSON.stringify(locals, null, 4) %></pre>
-</div>
 
 
-<%- include('parts/scripts') %> 
-<script>
-   const locals= <%- JSON.stringify(locals) %>
-</script>
+        <%- include('parts/scripts') %>
+            <script>
+                // 後端東西寫到前端導致顯示語法錯誤 但 是能用的
+                const locals = <% - JSON.stringify(locals) %>
+            </script>
 
-<%- include('parts/html-foot') %>
+            <%- include('parts/html-foot') %>

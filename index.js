@@ -2,13 +2,14 @@ require("dotenv").config();
 const express = require("express");
 
 const multer = require("multer");
+//{ dest:'tmp-uploads/' }上傳檔案放在裡面
 // const upload = multer({ dest:'tmp-uploads/' });
 const upload = require(__dirname + "/modules/upload-images");
 const session = require("express-session");
 const moment = require('moment-timezone');
 
 const db = require(__dirname + '/modules/mysql-connect');
-//跟著前面session
+//跟著前面const session
 const MysqlStore = require('express-mysql-session')(session);
 //{}空物件 db為連線物件
 const sessionStore = new MysqlStore({}, db);
@@ -22,6 +23,7 @@ app.set("case sensitive routing", true);
 
 app.use(
     session({
+        //saveUninitialized resave 會影響效能所以預設false
         // 新用戶沒有使用到 session 物件時不會建立 session 和發送 cookie
         saveUninitialized: false,
         resave: false, // 沒變更內容是否強制回存
@@ -56,12 +58,14 @@ app.get("/try-qs", (req, res) => {
 app.post("/try-post", (req, res) => {
     res.json(req.body);
 });
-
+//使用.route()是一種推薦的方法來避免重複路由命名和拼寫錯誤
 app.route("/try-post-form")
     .get((req, res) => {
+        //.render是 express 預設 template 就是會放在 views 資料夾裡面
         res.render("try-post-form");
     })
     .post((req, res) => {
+        // 把emil password從.body拿出來
         const { email, password } = req.body;
         res.render("try-post-form", { email, password });
     });
@@ -72,12 +76,14 @@ app.route("/try-post-form")
     app.post('/try-post-form', (req, res)=>{
     });
     */
-
-app.post("/try-upload", upload.single("avator"), (req, res) => {
+//單一個檔案放.file
+//avator為上傳的欄位
+app.post("/try-upload", upload.single("avatar"), (req, res) => {
     res.json(req.file);
 });
 
 //要傳全部資料用req.body
+//多個檔案放.files
 app.post("/try-uploads", upload.array("photos"), (req, res) => {
     res.json(req.files);
 });
