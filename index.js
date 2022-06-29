@@ -8,6 +8,11 @@ const upload = require(__dirname + "/modules/upload-images");
 const session = require("express-session");
 const moment = require('moment-timezone');
 
+const {
+    toDateString,
+    toDatetimeString,
+} = require(__dirname + '/modules/date-tools');
+
 const db = require(__dirname + '/modules/mysql-connect');
 //跟著前面const session
 const MysqlStore = require('express-mysql-session')(session);
@@ -44,7 +49,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 // -----------------------------------------------
 app.use((req, res, next) => {
-    res.locals.shinder = "哈囉";
+    // res.locals.shinder = '哈囉';
+
+    // template helper functions
+    res.locals.toDateString = toDateString;
+    res.locals.toDatetimeString = toDatetimeString;
     next();
 });
 
@@ -151,6 +160,8 @@ app.get("/try-session", (req, res) => {
         session: req.session,
     });
 });
+
+app.use('/address-book', require(__dirname + '/routes/address-book'));
 
 //只接受用戶端用get來拜訪
 app.get("/", (req, res) => {
