@@ -6,16 +6,16 @@ const multer = require("multer");
 // const upload = multer({ dest:'tmp-uploads/' });
 const upload = require(__dirname + "/modules/upload-images");
 const session = require("express-session");
-const moment = require('moment-timezone');
+const moment = require("moment-timezone");
+const axios = require("axios");
+const bcrypt = require("bcryptjs");
 
-const {
-    toDateString,
-    toDatetimeString,
-} = require(__dirname + '/modules/date-tools');
+const { toDateString, toDatetimeString } = require(__dirname +
+    "/modules/date-tools");
 
-const db = require(__dirname + '/modules/mysql-connect');
+const db = require(__dirname + "/modules/mysql-connect");
 //跟著前面const session
-const MysqlStore = require('express-mysql-session')(session);
+const MysqlStore = require("express-mysql-session")(session);
 //{}空物件 db為連線物件
 const sessionStore = new MysqlStore({}, db);
 
@@ -25,14 +25,13 @@ app.set("view engine", "ejs");
 //區分網址大小寫
 app.set("case sensitive routing", true);
 
-
 app.use(
     session({
         //saveUninitialized resave 會影響效能所以預設false
         // 新用戶沒有使用到 session 物件時不會建立 session 和發送 cookie
         saveUninitialized: false,
         resave: false, // 沒變更內容是否強制回存
-        secret: "dsdasfdsgfsdg34324235gdfgfgsg",//加密用的字串
+        secret: "dsdasfdsgfsdg34324235gdfgfgsg", //加密用的字串
         //有store就會在資料庫裡創session
         store: sessionStore,
         cookie: {
@@ -43,7 +42,7 @@ app.use(
 // -----------------------Top-level middlewares-----------------------------//
 //有這兩個就能處理全部進來的檔案
 // middlewares處理進來的檔案
-//express.urlencoded({ extended: false }) 
+//express.urlencoded({ extended: false })
 //use接收所有http的方法
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -54,6 +53,7 @@ app.use((req, res, next) => {
     // template helper functions
     res.locals.toDateString = toDateString;
     res.locals.toDatetimeString = toDatetimeString;
+    res.locals.session = req.session;
     next();
 });
 
@@ -122,29 +122,29 @@ app.get(["/aaa", "/bbb"], (req, res) => {
 });
 
 //自動把json檔轉陣列
-app.get('/try-json', (req, res)=>{
-    const data = require(__dirname + '/data/data01');
+app.get("/try-json", (req, res) => {
+    const data = require(__dirname + "/data/data01");
     console.log(data);
     //變數rows=(data)
     //locals前端
     res.locals.rows = data;
     //render樣板在views下
     //res渲染到views裡的try-json.ejs
-    res.render('try-json');
+    res.render("try-json");
 });
 
-app.get('/try-moment', (req, res)=>{
-    const fm = 'YYYY-MM-DD HH:mm:ss';
+app.get("/try-moment", (req, res) => {
+    const fm = "YYYY-MM-DD HH:mm:ss";
     //moment()現在時間
     const m1 = moment();
-    const m2 = moment('2022-02-28');
+    const m2 = moment("2022-02-28");
 
     res.json({
         m1: m1.format(fm),
-        m1a: m1.tz('Europe/London').format(fm),
+        m1a: m1.tz("Europe/London").format(fm),
         m2: m2.format(fm),
-        m2a: m2.tz('Europe/London').format(fm),
-    })
+        m2a: m2.tz("Europe/London").format(fm),
+    });
 });
 
 const adminsRouter = require(__dirname + "/routes/admins");
@@ -161,7 +161,61 @@ app.get("/try-session", (req, res) => {
     });
 });
 
-app.use('/address-book', require(__dirname + '/routes/address-book'));
+app.use("/address-book", require(__dirname + "/routes/address-book"));
+//引用yahoo網站
+app.get("/yahoo", async (req, res) => {
+    axios.get("https://tw.yahoo.com/").then(function (response) {
+        // handle success
+        console.log(response);
+        res.send(response.data);
+    });
+});
+//登入表單
+app.route("/login")
+    .get(async (req, res) => {
+        res.render("login");
+    })
+    .post(async (req, res) => {
+        const output = {
+            success: false,
+            error: "",
+            code: 0,
+        };
+        const sql = "SELECT * FROM admins WHERE account=?";
+        const [r1] = await db.query(sql, [req.body.account]);
+        //length 為Array物件的屬性
+        if (!r1.length) {
+            // 帳號錯誤
+            output.code = 401;
+            output.error = "帳密錯誤";
+            return res.json(output);
+        }
+        //const row = r1[0];
+
+        output.success = await bcrypt.compare(
+            req.body.password,
+            r1[0].pass_hash
+        );
+        // console.log(await bcrypt.compare(req.body.password, r1[0].pass_hash));
+        if (!output.success) {
+            // 密碼錯誤
+            output.code = 402;
+            output.error = "帳密錯誤";
+        } else {
+            req.session.admin = {
+                sid: r1[0].sid,
+                account: r1[0].account,
+            };
+        }
+
+        res.json(output);
+    });
+//登出
+app.get("/logout", (req, res) => {
+    delete req.session.admin;
+    //redirect (https://itbilu.com/nodejs/npm/EJD5cyg3l.html)
+    res.redirect("/");
+});
 
 //只接受用戶端用get來拜訪
 app.get("/", (req, res) => {
@@ -173,6 +227,7 @@ app.get("/", (req, res) => {
 //function是個特殊物件 可以加屬性在上面
 app.use(express.static("public"));
 app.use("/bootstrap", express.static("node_modules/bootstrap/dist"));
+app.use("/joi", express.static("node_modules/joi/dist"));
 
 // ------- 404 -----------
 //404要放在所有路由的後面
