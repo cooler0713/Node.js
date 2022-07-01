@@ -174,6 +174,7 @@ app.get("/try-session", (req, res) => {
 });
 
 app.use("/address-book", require(__dirname + "/routes/address-book"));
+app.use('/carts', require(__dirname + '/routes/carts'));
 //引用yahoo網站
 app.get("/yahoo", async (req, res) => {
     axios.get("https://tw.yahoo.com/").then(function (response) {
