@@ -11,7 +11,9 @@
     <script type="module">
         import { apiHost } from './lib/settings.js';
 
-        fetch(`${apiHost}/address-book/api`)
+        fetch(`${apiHost}/try-session`, {
+            credentials: 'include'
+        })
         .then(r=>r.json())
         .then(obj=>{
             info.innerHTML = JSON.stringify(obj, null, 4 );

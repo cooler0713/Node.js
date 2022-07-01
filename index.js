@@ -18,6 +18,7 @@ const db = require(__dirname + "/modules/mysql-connect");
 const MysqlStore = require("express-mysql-session")(session);
 //{}空物件 db為連線物件
 const sessionStore = new MysqlStore({}, db);
+const cors = require('cors')
 
 const app = express();
 //註冊樣版引擎
@@ -25,6 +26,16 @@ app.set("view engine", "ejs");
 //區分網址大小寫
 app.set("case sensitive routing", true);
 
+// -----------------------Top-level middlewares-----------------------------//
+const corsOptions = {
+    credentials: true,
+    origin: (origin, cb)=>{
+        console.log({origin});
+        cb(null, true);
+    }
+};
+
+app.use(cors(corsOptions));
 app.use(
     session({
         //saveUninitialized resave 會影響效能所以預設false
@@ -39,7 +50,8 @@ app.use(
         },
     })
 );
-// -----------------------Top-level middlewares-----------------------------//
+
+
 //有這兩個就能處理全部進來的檔案
 // middlewares處理進來的檔案
 //express.urlencoded({ extended: false })
